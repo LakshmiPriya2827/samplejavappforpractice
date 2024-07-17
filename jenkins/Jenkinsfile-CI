@@ -16,19 +16,31 @@ pipeline {
            }
            post {
                success {
-                  recordIssues(tools: [pmdParser(pattern: '**/pmd.xml')])
-               }
-           }
+                  recordIssues sourceCodeRetention: 'LAST_BUILD', tools: [pmdParser(pattern: '**/pmd.xml')]
+                       }
+                }
         }
-        stage('unit-test') {
+        stage('test') {
            steps {
               sh 'mvn test'
-                 }
+            }
            post {
                success {
-                  junit 'target/surefire-reports/*.xml'
+                  junit stdioRetention: '', testResults: 'target/surefire-reports/*.xml'
+                  }
                }
-           }
+           
+        }
+        stage('codecoverage') {
+            steps {
+                sh 'mvn verify'
+            }
+            post {
+                success {
+                    jacoco()
+                    }
+                }
+            
         }
         stage('package') {
            steps {
